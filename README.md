@@ -16,12 +16,14 @@ A personal project of `emguse`, a port of the `emguse/diff_press_logger_o` proje
 # What you need
 
 ## What to buy
-
 - Rapberry Pi pico RP2040
 - OMRON D6F-PH0505 Differential pressure sensor
+- special harness with GHR-04V-S used for D6F-PH0505
 - Adafruit DS3231 Precision RTC-STEMMA QT(Product ID: 5188)
+- STEMMA QT / Qwiic JST SH 4-pin Cable - 100mm Long(Product ID: 4210)
 - Adafruit Micro SD SPI or SDIO Card Breakout Board(Product ID: 4682)
 - Thermal printer DP-EH600
+- 5V 2A power supply (2.1mm DC barrel plug)
 
 ## Printed circuit board
 - PB-0009-A PCB board
@@ -29,9 +31,9 @@ A personal project of `emguse`, a port of the `emguse/diff_press_logger_o` proje
 - B2B-XH-AM(LF)(SN) JST
 - B3B-XH-AM(LF)(SN) JST
 - B8B-XH-AM(LF)(SN) JST
-- 2.2k Ohm resistance(Resistor_SMD:R_0603_1608Metric)
-- 3.3k Ohm resistance(Resistor_SMD:R_0603_1608Metric)
-- 10k Ohm resistance(Resistor_SMD:R_0603_1608Metric)
+- 2.2k Ohm Resistor_SMD:R_0603_1608Metric
+- 3.3k Ohm Resistor_SMD:R_0603_1608Metric
+- 10k Ohm Resistor_SMD:R_0603_1608Metric
 - PinHeader_1x02_P2.54mm_Vertical
 - SW_Push_1P1T_NO_6x6mm
 - Buzzer_12x9.5RM7.6(self-excited)
