@@ -2,7 +2,7 @@
 
 A device to record the rate of change of differential pressure using an OMRON D6F sensor, built with Raspberry Pi pico and CircuitPython.
 
-A personal project of `emguse`, a port of the `emguse/diff_press_logger_o` project to a microcontroller.
+A personal project of `emguse`, a port of the [emguse/diff_press_logger_o](https://github.com/emguse/diff_press_logger_o) project to a microcontroller.
 
 # Features
 - Time recording by RTC
