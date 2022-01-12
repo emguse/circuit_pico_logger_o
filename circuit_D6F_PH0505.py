@@ -3,6 +3,12 @@ import busio
 import time
 from adafruit_bus_device.i2c_device import I2CDevice
 
+'''
+- 2021/12/14 ver.1.00
+- Author : emguse
+- License: MIT License
+'''
+
 RANGE_100 = 100  # ±50Pa(D6F-PH0505)
 RANGE_1000 = 1000  # ±500Pa(D6F-PH5050)
 RANGE_250 = 250  # 0-250Pa(D6F-PH0025)
