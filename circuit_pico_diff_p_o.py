@@ -11,7 +11,7 @@ import sdcardio
 import storage
 
 '''
-- 2021/12/20 ver.1.00
+- 2022/01/13 ver.1.01
 - Author : emguse
 - License: MIT License
 '''
@@ -142,6 +142,9 @@ def main():
     logger = DifferentialPressureLogger()
     ma = MovingAverage(MOVE_AVE_LENGTH, True)
     past_time = 0
+    
+    led = digitalio.DigitalInOut(board.LED)
+    led.direction = digitalio.Direction.OUTPUT
 
     if EXPORT_CSV:
         spi = busio.SPI(SPI_SCK, MOSI=SPI_MOSI, MISO=SPI_MISO)
@@ -193,11 +196,17 @@ def main():
                     Forward_p.extend(after_p)
                     logger.export_csv(Forward_p)
         logger.past_sample = logger.ma_p
-        
+
         if logger.button_up.value:
             logger.threshold_up()
         if logger.button_down.value:
             logger.threshold_down()
+        
+        t = logger.rtc.read()
+        if t.tm_sec % 2 == 0:
+            led.value = True
+        else:
+            led.value = False
 
 if __name__ == "__main__":
     main()
