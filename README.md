@@ -4,6 +4,11 @@ A device to record the rate of change of differential pressure using an OMRON D6
 
 A personal project of `emguse`, a port of the [emguse/diff_press_logger_o](https://github.com/emguse/diff_press_logger_o) project to a microcontroller.
 
+# Notes.
+- The PB-0009-A PCB board has three different power input methods, but there is no diode protection between each of them.
+- Always use only one type of power input.
+- If you are using the Pico's USB to supply power, it will not be able to provide power for the printer. Do not connect the printer or turn off the setting to use it.
+
 # Features
 - Time recording by RTC
 - Event recording (CSV file)
