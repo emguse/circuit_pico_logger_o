@@ -11,7 +11,7 @@ import sdcardio
 import storage
 
 '''
-- 2022/01/13 ver.1.01
+- 2022/01/28 ver.1.02
 - Author : emguse
 - License: MIT License
 '''
@@ -60,6 +60,7 @@ class DifferentialPressureLogger:
         self.button_down.switch_to_input(pull=digitalio.Pull.DOWN)
         self.threshold = THRESHOLD
         self.buzzer = PiPi()
+        self.datetime = None
     def read_dp(self) -> Float:
         self.d6f_ph0505.start_order()
         self.d6f_ph0505.read_order()
@@ -76,16 +77,18 @@ class DifferentialPressureLogger:
         print(t)
         self.rtc.time_adjusting = False
     def timestamp(self) -> None:
-        t = self.rtc.read()
+        self.datetime = self.rtc.read()
         print(
             "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
-                t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec
+                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday, 
+                self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
             )
         )
         if USE_PRINTER:
             self.thermal_printer.printer.print(
                 "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
-                    t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec
+                    self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday, 
+                    self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
                 )
             )
     def threshold_up(self) -> None:
@@ -101,10 +104,10 @@ class DifferentialPressureLogger:
             self.thermal_printer.printer.print("THRESHOLD:" + str(self.threshold))
         time.sleep(0.5)
     def export_csv(self, d_a) -> None:
-        t = self.rtc.read()
         tstamp = str(
             "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
-                t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec
+                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday, 
+                self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
             ))
         filename = str(SD_DIR + '/' + tstamp + '.csv')
         try:
@@ -168,21 +171,9 @@ def main():
         delta = logger.past_sample - logger.ma_p
         if past_time <= time.time():
             if abs(delta) >= logger.threshold:
+                triggered_p = logger.ma_p
                 # print("diff_p:" + str(round(ma_p, 4)) + "  Δ:" + str(round(delta, 4)) + "  time:" + str(time.time()))
                 print((round(logger.ma_p, 4), round(delta, 4)))
-                logger.timestamp()
-                if USE_PRINTER:
-                    logger.thermal_printer.printer.print(
-                        str(
-                            "diff_P:"
-                            + str(round(logger.ma_p, 4))
-                            + ", delta:"
-                            + str(round(delta, 4))
-                        )
-                    )
-                    logger.thermal_printer.printer.feed(1)
-                if USE_BUZZER:
-                    logger.buzzer.pi()
                 past_time = time.time() + IVENT_LENGTH
                 # File output processing
                 if EXPORT_CSV == True:
@@ -192,9 +183,22 @@ def main():
                         after_p.append(logger.ma_p)
                     Forward_p = []
                     for i in range(QUE_SIZE):
-                        Forward_p.append(logger.rb_p.ring[i])
+                        Forward_p.append(logger.rb_p.popleft())
                     Forward_p.extend(after_p)
                     logger.export_csv(Forward_p)
+                logger.timestamp()
+                if USE_PRINTER:
+                    logger.thermal_printer.printer.print(
+                        str(
+                            "diff_P:"
+                            + str(round(triggered_p, 4))
+                            + ", delta:"
+                            + str(round(delta, 4))
+                        )
+                    )
+                    logger.thermal_printer.printer.feed(1)
+                if USE_BUZZER:
+                    logger.buzzer.pi()
         logger.past_sample = logger.ma_p
 
         if logger.button_up.value:
