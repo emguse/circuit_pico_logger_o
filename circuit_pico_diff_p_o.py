@@ -11,7 +11,7 @@ import sdcardio
 import storage
 
 '''
-- 2022/01/28 ver.1.02
+- 2022/01/29 ver.1.03
 - Author : emguse
 - License: MIT License
 '''
@@ -84,6 +84,7 @@ class DifferentialPressureLogger:
                 self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
             )
         )
+    def pprint_timestamp(self):
         if USE_PRINTER:
             self.thermal_printer.printer.print(
                 "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
@@ -159,6 +160,7 @@ def main():
     if TIME_ADJUSTING == True:
         logger.time_adjusting()
     logger.timestamp()
+    logger.print_timestamp()
     if USE_PRINTER:
         logger.thermal_printer.printer.print("THRESHOLD:" + str(logger.threshold))
 
@@ -176,6 +178,7 @@ def main():
                 print((round(logger.ma_p, 4), round(delta, 4)))
                 past_time = time.time() + IVENT_LENGTH
                 # File output processing
+                logger.timestamp()
                 if EXPORT_CSV == True:
                     after_p = []
                     for _ in range(QUE_SIZE):
@@ -186,7 +189,7 @@ def main():
                         Forward_p.append(logger.rb_p.popleft())
                     Forward_p.extend(after_p)
                     logger.export_csv(Forward_p)
-                logger.timestamp()
+                logger.pprint_timestamp()
                 if USE_PRINTER:
                     logger.thermal_printer.printer.print(
                         str(
