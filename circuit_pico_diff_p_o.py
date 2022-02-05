@@ -11,7 +11,7 @@ import sdcardio
 import storage
 
 '''
-- 2022/01/29 ver.1.03
+- 2022/02/05 ver.1.04
 - Author : emguse
 - License: MIT License
 '''
@@ -22,7 +22,7 @@ QUE_SIZE = int(IVENT_LENGTH / 2 * 1 / CYCLE_TIME)
 MOVE_AVE_LENGTH = 2
 REFARENCE_PAST_SAMPLE = 2
 THRESHOLD = 1.0
-ZERO_OFFSET = 0  # Zero point correction
+ZERO_OFFSET = 0.0  # Zero point correction
 USE_PRINTER = True
 EXPORT_CSV = True
 USE_BUZZER = True
@@ -52,8 +52,8 @@ class DifferentialPressureLogger:
         self.d6f_ph0505 = D6F_PH0505(i2c)
         self.rtc = RtcDs3231(i2c)
         self.thermal_printer = PrinterDpEh600()
-        self.ma_p = 0
-        self.past_sample = 0
+        self.ma_p = float()
+        self.past_sample = float()
         self.button_up = digitalio.DigitalInOut(BUTTON_A)
         self.button_up.switch_to_input(pull=digitalio.Pull.DOWN)
         self.button_down = digitalio.DigitalInOut(BUTTON_B)
@@ -61,14 +61,16 @@ class DifferentialPressureLogger:
         self.threshold = THRESHOLD
         self.buzzer = PiPi()
         self.datetime = None
-    def read_dp(self) -> Float:
+    def read_dp(self):
         self.d6f_ph0505.start_order()
         self.d6f_ph0505.read_order()
         return self.d6f_ph0505.diff_p
-    def read_and_record(self) -> None:
+    def read_and_record(self):
         self.ma_p = self.read_dp() - ZERO_OFFSET
         self.rb_p.append(self.ma_p)
         self.rb_ref.append(self.ma_p)
+    def single_read(self):
+        self.ma_p = self.read_dp() - ZERO_OFFSET
     def time_adjusting(self) -> None:
         self.rtc.time_adjusting = True
         self.rtc.time_to_set = TIME_TO_SET
@@ -80,11 +82,11 @@ class DifferentialPressureLogger:
         self.datetime = self.rtc.read()
         print(
             "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
-                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday, 
+                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday,
                 self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
             )
         )
-    def pprint_timestamp(self):
+    def pprint_timestamp(self) -> None:
         if USE_PRINTER:
             self.thermal_printer.printer.print(
                 "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
@@ -92,6 +94,7 @@ class DifferentialPressureLogger:
                     self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
                 )
             )
+
     def threshold_up(self) -> None:
         print("up")
         self.threshold = round(self.threshold + 0.1, 3)
@@ -107,7 +110,7 @@ class DifferentialPressureLogger:
     def export_csv(self, d_a) -> None:
         tstamp = str(
             "{:04}{:02}{:02}T{:02}{:02}{:02}".format(
-                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday, 
+                self.datetime.tm_year, self.datetime.tm_mon, self.datetime.tm_mday,
                 self.datetime.tm_hour, self.datetime.tm_min, self.datetime.tm_sec
             ))
         filename = str(SD_DIR + '/' + tstamp + '.csv')
@@ -146,7 +149,7 @@ def main():
     logger = DifferentialPressureLogger()
     ma = MovingAverage(MOVE_AVE_LENGTH, True)
     past_time = 0
-    
+
     led = digitalio.DigitalInOut(board.LED)
     led.direction = digitalio.Direction.OUTPUT
 
@@ -160,13 +163,13 @@ def main():
     if TIME_ADJUSTING == True:
         logger.time_adjusting()
     logger.timestamp()
-    logger.print_timestamp()
+    logger.pprint_timestamp()
     if USE_PRINTER:
         logger.thermal_printer.printer.print("THRESHOLD:" + str(logger.threshold))
 
-    for _ in range(MOVE_AVE_LENGTH):
+    for _ in range(QUE_SIZE): # buffer filling
         logger.read_and_record()
-        logger.past_sample = logger.ma_p
+    logger.past_sample = logger.ma_p
 
     while True:
         logger.read_and_record()
@@ -175,21 +178,21 @@ def main():
             if abs(delta) >= logger.threshold:
                 triggered_p = logger.ma_p
                 # print("diff_p:" + str(round(ma_p, 4)) + "  Δ:" + str(round(delta, 4)) + "  time:" + str(time.time()))
-                print((round(logger.ma_p, 4), round(delta, 4)))
                 past_time = time.time() + IVENT_LENGTH
                 # File output processing
-                logger.timestamp()
                 if EXPORT_CSV == True:
                     after_p = []
                     for _ in range(QUE_SIZE):
-                        logger.ma_p = logger.read_dp() - ZERO_OFFSET
+                        logger.single_read()
                         after_p.append(logger.ma_p)
                     Forward_p = []
                     for i in range(QUE_SIZE):
                         Forward_p.append(logger.rb_p.popleft())
                     Forward_p.extend(after_p)
                     logger.export_csv(Forward_p)
-                logger.pprint_timestamp()
+                logger.timestamp()
+                print((round(triggered_p, 4), round(delta, 4)))
+                #logger.pprint_timestamp()
                 if USE_PRINTER:
                     logger.thermal_printer.printer.print(
                         str(
@@ -202,13 +205,15 @@ def main():
                     logger.thermal_printer.printer.feed(1)
                 if USE_BUZZER:
                     logger.buzzer.pi()
+                for _ in range(QUE_SIZE): # buffer filling
+                    logger.read_and_record()
         logger.past_sample = logger.ma_p
 
         if logger.button_up.value:
             logger.threshold_up()
         if logger.button_down.value:
             logger.threshold_down()
-        
+
         t = logger.rtc.read()
         if t.tm_sec % 2 == 0:
             led.value = True
