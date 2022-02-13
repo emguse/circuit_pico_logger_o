@@ -9,9 +9,10 @@ import adafruit_thermal_printer
 from circuit_rtc_ds3231 import RtcDs3231
 import sdcardio
 import storage
+from adafruit_ht16k33.segments import Seg7x4
 
 '''
-- 2022/02/05 ver.1.04
+- 2022/02/13 ver.1.10
 - Author : emguse
 - License: MIT License
 '''
@@ -132,7 +133,6 @@ class PiPi:
         time.sleep(0.03)
         self.buzzer.value = False
 
-
 class PrinterDpEh600:
     def __init__(self) -> None:
         self.TX = PRINTER_TX
@@ -149,9 +149,14 @@ def main():
     logger = DifferentialPressureLogger()
     ma = MovingAverage(MOVE_AVE_LENGTH, True)
     past_time = 0
+    past_disp_time = 0
 
     led = digitalio.DigitalInOut(board.LED)
     led.direction = digitalio.Direction.OUTPUT
+
+    i2c1 = busio.I2C(board.GP27, board.GP26)
+    display = Seg7x4(i2c1)
+    display.brightness = 0.5
 
     if EXPORT_CSV:
         spi = busio.SPI(SPI_SCK, MOSI=SPI_MOSI, MISO=SPI_MISO)
@@ -219,6 +224,11 @@ def main():
             led.value = True
         else:
             led.value = False
+        
+        if past_disp_time <= time.time():
+            display.fill(0)
+            display.print('{:.2f}'.format(logger.ma_p))
+            past_disp_time = time.time() + 0.2
 
 if __name__ == "__main__":
     main()
