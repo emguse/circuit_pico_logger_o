@@ -12,7 +12,7 @@ import storage
 from adafruit_ht16k33.segments import Seg7x4
 
 '''
-- 2022/02/13 ver.1.10
+- 2022/02/14 ver.1.11
 - Author : emguse
 - License: MIT License
 '''
@@ -197,7 +197,7 @@ def main():
                     logger.export_csv(Forward_p)
                 logger.timestamp()
                 print((round(triggered_p, 4), round(delta, 4)))
-                #logger.pprint_timestamp()
+                logger.pprint_timestamp()
                 if USE_PRINTER:
                     logger.thermal_printer.printer.print(
                         str(
