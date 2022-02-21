@@ -1,12 +1,12 @@
 import board
 import digitalio
-from circuit_D6F_PH0505 import DifferentialPressureSensorD6F_PH0505 as D6F_PH0505
-from circuit_move_ave import MovingAverage
-from circuit_ring_buffer import RingBuffer
+from D6F_PH0505 import DifferentialPressureSensorD6F_PH0505 as D6F_PH0505
+from move_ave import MovingAverage
+from ring_buffer import RingBuffer
 import time
 import busio
 import adafruit_thermal_printer
-from circuit_rtc_ds3231 import RtcDs3231
+from rtc_ds3231 import RtcDs3231
 import sdcardio
 import storage
 from adafruit_ht16k33.segments import Seg7x4

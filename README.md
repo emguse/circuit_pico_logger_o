@@ -1,4 +1,4 @@
-# circuit_pico_logger_o
+# pico_logger_o
 
 A device to record the rate of change of differential pressure using an OMRON D6F sensor, built with Raspberry Pi pico and CircuitPython.
 
@@ -59,7 +59,7 @@ A personal project of `emguse`, a port of the [emguse/diff_press_logger_o](https
 
 1. Connect Pico to your PC in Boot mode and transfer the latest `.UF2` file for Pico.
 1. Transfer the modules listed in `Requirement` from the Circuitpython bundle to the `lib` folder.
-1. Rename the `circuit_pico_diff_p_o.py` file to `code.py` after transferring the files in this repository.
+1. Rename the `pico_diff_p_o.py` file to `code.py` after transferring the files in this repository.
 
 # Requirement
 - adafruit_bus_device.i2c_device
